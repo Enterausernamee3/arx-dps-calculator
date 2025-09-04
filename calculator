@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DPS Calculator</title>
+  <style>
+    :root {
+      /* Futuristic (dark) theme */
+      --bg: #0d0d0f;
+      --card: #1a1a20;
+      --text: #e0e0e0;
+      --accent: #00e5ff;
+      --input-bg: #111116;
+      --input-border: #2e2e38;
+      --good: #0f1f0f;
+      --mediocre: #1f1f0f;
+      --bad: #1f0f0f;
+      --good-label: #00ff88;
+      --mediocre-label: #ffcc00;
+      --bad-label: #ff4444;
+    }
+    body.light {
+      /* Minimal (light) theme */
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: #222;
+      --accent: #007acc;
+      --input-bg: #fafafa;
+      --input-border: #ddd;
+      --good: #e6ffe6;
+      --mediocre: #fff8e6;
+      --bad: #ffe6e6;
+      --good-label: #008844;
+      --mediocre-label: #cc8800;
+      --bad-label: #cc0000;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+      transition: background 0.4s, color 0.4s;
+    }
+    .container {
+      max-width: 520px;
+      width: 100%;
+      background: var(--card);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+      border: 1px solid rgba(0, 229, 255, 0.1);
+      transition: background 0.4s, box-shadow 0.4s;
+    }
+    h2 {
+      text-align:center;
+      margin-bottom:1rem;
+      color: var(--accent);
+    }
+    label {
+      display:block;
+      margin-top:12px;
+      font-weight:600;
+    }
+    input[type=text] {
+      width:100%;
+      padding:10px;
+      margin-top:6px;
+      border:1px solid var(--input-border);
+      border-radius:8px;
+      background: var(--input-bg);
+      color: var(--text);
+      font-size:15px;
+      box-shadow: inset 0 0 5px rgba(0,229,255,0.15);
+      transition: background 0.4s, color 0.4s, border 0.3s;
+    }
+    input[type=text]:focus {
+      outline:none;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(0,229,255,0.5);
+    }
+    button {
+      margin-top:14px;
+      width:100%;
+      padding:12px;
+      border:none;
+      background: var(--accent);
+      color: var(--bg);
+      font-size:16px;
+      font-weight:600;
+      border-radius:8px;
+      cursor:pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.4s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 18px rgba(0,229,255,0.7);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 0 10px rgba(0,229,255,0.5);
+    }
+    .result {
+      margin-top:18px;
+      padding:14px;
+      background: var(--input-bg);
+      border-radius:10px;
+      font-weight:700;
+      white-space:pre-line;
+      border: 1px solid rgba(0,229,255,0.2);
+      transition: background 0.4s;
+    }
+    .performance-label {
+      margin-top:8px;
+      font-size:14px;
+      font-weight:600;
+      text-align:center;
+    }
+
+    /* Performance backgrounds */
+    .good { background: var(--good); }
+    .mediocre { background: var(--mediocre); }
+    .bad { background: var(--bad); }
+    .good-label { color: var(--good-label); }
+    .mediocre-label { color: var(--mediocre-label); }
+    .bad-label { color: var(--bad-label); }
+
+    /* Glow animations for box */
+    @keyframes glowGreen {
+      0% { box-shadow: 0 0 10px var(--good-label); }
+      50% { box-shadow: 0 0 25px var(--good-label); }
+      100% { box-shadow: 0 0 10px var(--good-label); }
+    }
+    @keyframes glowYellow {
+      0% { box-shadow: 0 0 10px var(--mediocre-label); }
+      50% { box-shadow: 0 0 25px var(--mediocre-label); }
+      100% { box-shadow: 0 0 10px var(--mediocre-label); }
+    }
+    @keyframes glowRed {
+      0% { box-shadow: 0 0 10px var(--bad-label); }
+      50% { box-shadow: 0 0 25px var(--bad-label); }
+      100% { box-shadow: 0 0 10px var(--bad-label); }
+    }
+    .pulse-green { animation: glowGreen 1.5s ease-in-out 2; }
+    .pulse-yellow { animation: glowYellow 1.5s ease-in-out 2; }
+    .pulse-red { animation: glowRed 1.5s ease-in-out 2; }
+
+    /* Glow animations for labels */
+    @keyframes labelGlowGreen {
+      0% { text-shadow: 0 0 6px var(--good-label); }
+      50% { text-shadow: 0 0 14px var(--good-label); }
+      100% { text-shadow: 0 0 6px var(--good-label); }
+    }
+    @keyframes labelGlowYellow {
+      0% { text-shadow: 0 0 6px var(--mediocre-label); }
+      50% { text-shadow: 0 0 14px var(--mediocre-label); }
+      100% { text-shadow: 0 0 6px var(--mediocre-label); }
+    }
+    @keyframes labelGlowRed {
+      0% { text-shadow: 0 0 6px var(--bad-label); }
+      50% { text-shadow: 0 0 14px var(--bad-label); }
+      100% { text-shadow: 0 0 6px var(--bad-label); }
+    }
+    .pulse-label-green { animation: labelGlowGreen 1.5s ease-in-out 2; }
+    .pulse-label-yellow { animation: labelGlowYellow 1.5s ease-in-out 2; }
+    .pulse-label-red { animation: labelGlowRed 1.5s ease-in-out 2; }
+
+    .toggle {
+      margin-top:12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:14px;
+    }
+    .theme-toggle {
+      text-align:center;
+      margin-top:1rem;
+    }
+    /* Toast notification */
+    .toast {
+      visibility: hidden;
+      min-width: 200px;
+      background: #222;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: fixed;
+      z-index: 999;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.4s, bottom 0.4s;
+      box-shadow: 0 0 10px rgba(0,229,255,0.5);
+    }
+    .toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>⚡ DPS Calculator ⚡</h2>
+
+    <label>DMG (base attack damage)</label>
+    <input type="text" id="dmg" placeholder="e.g. 469.7k" onblur="formatInput(this)" />
+
+    <label>SPA (attack cooldown in seconds)</label>
+    <input type="text" id="spa" placeholder="e.g. 1.7" onblur="formatInput(this)" />
+
+    <label>Ability DMG</label>
+    <input type="text" id="abilityDmg" placeholder="e.g. 5.23M" onblur="formatInput(this)" />
+
+    <label>Ability CD (seconds)</label>
+    <input type="text" id="abilityCd" placeholder="e.g. 22.5" onblur="formatInput(this)" />
+
+    <label>Crit Chance (0 to 1)</label>
+    <input type="text" id="critChance" placeholder="e.g. 0.6" onblur="formatInput(this)" />
+
+    <label>Crit Multiplier (e.g. 2, 3.1)</label>
+    <input type="text" id="critMult" placeholder="e.g. 3.1" onblur="formatInput(this)" />
+
+    <div class="toggle">
+      <input type="checkbox" id="fullNumbers" onchange="refreshInputs()" />
+      <label for="fullNumbers">Show full numbers only</label>
+    </div>
+
+    <div class="toggle">
+      <input type="checkbox" id="autoCalc" onchange="toggleAutoCalc()" />
+      <label for="autoCalc">Auto-Calculate DPS</label>
+    </div>
+
+    <button onclick="calculateDps()">⚔️ Calculate DPS</button>
+    <button onclick="copyResults()">📋 Copy Results</button>
+
+    <div id="result" class="result"></div>
+    <div id="performanceLabel" class="performance-label"></div>
+
+    <div class="theme-toggle">
+      <button id="themeButton" onclick="toggleTheme()">🌙 Toggle Theme</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">✅ Results copied!</div>
+
+  <script>
+    function parseNumber(input) {
+      if (input === undefined || input === null) return 0;
+      let s = String(input).trim();
+      if (s === "") return 0;
+      s = s.replace(/\s*\(.*\)$/, "").trim();
+      s = s.replace(/,/g, "");
+      if (s === "") return 0;
+      let multiplier = 1;
+      const last = s.slice(-1).toLowerCase();
+      if (last === "k") { multiplier = 1e3; s = s.slice(0, -1); }
+      else if (last === "m") { multiplier = 1e6; s = s.slice(0, -1); }
+      else if (last === "b") { multiplier = 1e9; s = s.slice(0, -1); }
+      else if (last === "t") { multiplier = 1e12; s = s.slice(0, -1); }
+      let n = parseFloat(s);
+      if (isNaN(n)) return 0;
+      return n * multiplier;
+    }
+
+    function formatFullNumber(num) {
+      if (!isFinite(num) || isNaN(num)) return "0";
+      if (Math.abs(num - Math.round(num)) < 1e-9) {
+        return Math.round(num).toLocaleString();
+      }
+      return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatShort(num) {
+      if (!isFinite(num) || isNaN(num)) return "0";
+      if (document.getElementById("fullNumbers").checked) {
+        return formatFullNumber(num);
+      }
+      if (Math.abs(num) >= 1e12) return (num / 1e12).toFixed(2) + "T (" + num.toLocaleString() + ")";
+      if (Math.abs(num) >= 1e9)  return (num / 1e9).toFixed(2) + "B (" + num.toLocaleString() + ")";
+      if (Math.abs(num) >= 1e6)  return (num / 1e6).toFixed(2) + "M (" + num.toLocaleString() + ")";
+      if (Math.abs(num) >= 1e3)  return (num / 1e3).toFixed(2) + "k (" + num.toLocaleString() + ")";
+      return num.toFixed(2);
+    }
+
+    function formatInput(element) {
+      if (!element) return;
+      const raw = element.value;
+      if (!raw || typeof raw !== "string" || raw.trim() === "") {
+        element.value = "";
+        return;
+      }
+      const val = parseNumber(raw);
+      if (isFinite(val) && val !== 0) {
+        element.value = formatShort(val);
+      } else if (val === 0) {
+        if (document.getElementById("fullNumbers").checked) element.value = "0";
+        else element.value = "0.00";
+      }
+      if (document.getElementById("autoCalc").checked) calculateDps();
+    }
+
+    function refreshInputs() {
+      document.querySelectorAll("input[type=text]").forEach(el => formatInput(el));
+      if (document.getElementById("autoCalc").checked) calculateDps();
+    }
+
+    function calculateDps() {
+      const dmg = parseNumber(document.getElementById('dmg').value);
+      const spa = parseNumber(document.getElementById('spa').value) || 1;
+      const abilityDmg = parseNumber(document.getElementById('abilityDmg').value) || 0;
+      const abilityCd = parseNumber(document.getElementById('abilityCd').value) || 1;
+      const critChance = parseNumber(document.getElementById('critChance').value) || 0;
+      const critMult = parseNumber(document.getElementById('critMult').value) || 1;
+
+      const expectedHit = dmg * ((1 - critChance) + critChance * critMult);
+      const attackDps = expectedHit / spa;
+      const abilityDps = abilityDmg / abilityCd;
+      const totalDps = attackDps + abilityDps;
+
+      const baseAttackDps = dmg / spa;
+      const baseTotalDps = baseAttackDps + abilityDps;
+
+      const resultText = 
+        `⚔️ Attack DPS (with crits): ${formatShort(attackDps)}\n` +
+        `💥 Ability DPS: ${formatShort(abilityDps)}\n` +
+        `📊 Total DPS (with crits): ${formatShort(totalDps)}\n` +
+        `-----------------------------\n` +
+        `⚔️ Attack DPS (no crits): ${formatShort(baseAttackDps)}\n` +
+        `📊 Total DPS (no crits): ${formatShort(baseTotalDps)}`;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerText = resultText;
+
+      // Reset classes
+      resultDiv.className = "result";
+      const perfLabel = document.getElementById("performanceLabel");
+      perfLabel.className = "performance-label";
+
+      if (dmg > 0) {
+        const ratio = totalDps / dmg;
+        if (ratio >= 1.3) {
+          resultDiv.classList.add("good", "pulse-green");
+          perfLabel.innerText = "✅ Performance: Good";
+          perfLabel.classList.add("good-label", "pulse-label-green");
+        } else if (ratio >= 0.7) {
+          resultDiv.classList.add("mediocre", "pulse-yellow");
+          perfLabel.innerText = "⚠️ Performance: Mediocre";
+          perfLabel.classList.add("mediocre-label", "pulse-label-yellow");
+        } else {
+          resultDiv.classList.add("bad", "pulse-red");
+          perfLabel.innerText = "❌ Performance: Poor";
+          perfLabel.classList.add("bad-label", "pulse-label-red");
+        }
+      } else {
+        perfLabel.innerText = "";
+      }
+    }
+
+    function copyResults() {
+      const resultText = document.getElementById('result').innerText;
+      if (!resultText.trim()) {
+        showToast("⚠️ No results to copy yet!");
+        return;
+      }
+      navigator.clipboard.writeText(resultText).then(() => {
+        showToast("✅ Results copied!");
+      }).catch(() => {
+        showToast("❌ Copy failed!");
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.className = "toast show";
+      setTimeout(() => { toast.className = "toast"; }, 2500);
+    }
+
+    function toggleAutoCalc() {
+      if (document.getElementById("autoCalc").checked) {
+        calculateDps();
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      const isLight = document.body.classList.contains("light");
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+      updateThemeButton();
+    }
+
+    function updateThemeButton() {
+      const btn = document.getElementById("themeButton");
+      if (document.body.classList.contains("light")) {
+        btn.innerText = "🌙 Toggle Theme";
+      } else {
+        btn.innerText = "☀️ Toggle Theme";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light");
+      }
+      updateThemeButton();
+
+      document.querySelectorAll("input[type=text]").forEach(el => {
+        el.addEventListener('blur', () => formatInput(el));
+        el.addEventListener('input', () => {
+          if (document.getElementById("autoCalc").checked) calculateDps();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
